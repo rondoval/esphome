@@ -120,11 +120,11 @@ void BME680Component::setup() {
     this->mark_failed();
     return;
   }
-  if (!this->read_byte(0x00, &this->calibration_.res_heat_val)) {
+  if (!this->read_byte(0x00, (uint8_t*)&this->calibration_.res_heat_val)) {
     this->mark_failed();
     return;
   }
-  if (!this->read_byte(0x04, &this->calibration_.range_sw_err)) {
+  if (!this->read_byte(0x04, (uint8_t*)&this->calibration_.range_sw_err)) {
     this->mark_failed();
     return;
   }
@@ -284,7 +284,7 @@ uint8_t BME680Component::calc_heater_resistance_(uint16_t temperature) {
   var4 = var1 * (1.0f + (var2 * (float)temperature));
   var5 = var4 + (var3 * ambient_temperature);
   heatr_res = (uint8_t)(3.4f * ((var5 * (4 / (4 + res_heat_range)) *
-    (1/(1 + (calib.res_heat_val * 0.002f)))) - 25));
+    (1/(1 + (this->calibration_.res_heat_val * 0.002f)))) - 25));
 
   return heatr_res;
 }
