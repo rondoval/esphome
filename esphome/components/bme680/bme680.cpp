@@ -180,7 +180,7 @@ void BME680Component::setup() {
     return;
   }
   gas0_control &= ~0b00001000;
-  gas0_control |= heat_off ? 0b100 : 0b000;
+  gas0_control |= heat_off ? 0b1000 : 0b0000;
   if (!this->write_byte(BME680_REGISTER_CONTROL_GAS0, gas0_control)) {
     this->mark_failed();
     return;
@@ -232,7 +232,7 @@ float BME680Component::get_setup_priority() const { return setup_priority::DATA;
 void BME680Component::update() {
   uint8_t meas_control = 0;  // No need to fetch, we're setting all fields
   meas_control |= (this->temperature_oversampling_ & 0b111) << 5;
-  meas_control |= (this->pressure_oversampling_ & 0b111) << 5;
+  meas_control |= (this->pressure_oversampling_ & 0b111) << 2;
   meas_control |= 0b01;  // forced mode
   if (!this->write_byte(BME680_REGISTER_CONTROL_MEAS, meas_control)) {
     this->status_set_warning();
@@ -299,7 +299,7 @@ void BME680Component::read_data_() {
   uint32_t raw_temperature = (uint32_t(data[5]) << 12) | (uint32_t(data[6]) << 4) | (uint32_t(data[7]) >> 4);
   uint32_t raw_pressure = (uint32_t(data[2]) << 12) | (uint32_t(data[3]) << 4) | (uint32_t(data[4]) >> 4);
   uint32_t raw_humidity = (uint32_t(data[8]) << 8) | uint32_t(data[9]);
-  uint16_t raw_gas = (uint16_t(data[13]) << 2) | (uint16_t(14) >> 6);
+  uint16_t raw_gas = (uint32_t(data[13]) << 2) | (uint32_t(data[14]) >> 6);
   uint8_t gas_range = data[14] & 0x0F;
 
   float temperature = this->calc_temperature_(raw_temperature);
