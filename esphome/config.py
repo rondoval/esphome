@@ -119,15 +119,14 @@ def _lookup_module(domain, is_platform):
     path = 'esphome.components.{}'.format(domain)
     try:
         module = importlib.import_module(path)
-    except ImportError:
-        import traceback
-        _LOGGER.error("Unable to import component %s:", domain)
-        traceback.print_exc()
+    except ImportError as e:
+        if 'No module named' in str(e):
+            _LOGGER.error("Unable to import component %s:", domain)
+        else:
+            _LOGGER.error("Unable to import component %s:", domain, exc_info=True)
         return None
     except Exception:  # pylint: disable=broad-except
-        import traceback
-        _LOGGER.error("Unable to load component %s:", domain)
-        traceback.print_exc()
+        _LOGGER.error("Unable to load component %s:", domain, exc_info=True)
         return None
     else:
         manif = ComponentManifest(module, CORE_COMPONENTS_PATH, is_platform=is_platform)
@@ -233,15 +232,19 @@ class Config(OrderedDict):
                 return err
         return None
 
-    def get_deepest_value_for_path(self, path):
-        # type: (ConfigPath) -> ConfigType
+    def get_deepest_document_range_for_path(self, path):
+        # type: (ConfigPath) -> Optional[ESPHomeDataBase]
         data = self
+        doc_range = None
         for item_index in path:
             try:
                 data = data[item_index]
             except (KeyError, IndexError, TypeError):
-                return data
-        return data
+                return doc_range
+            if isinstance(data, ESPHomeDataBase) and data.esp_range is not None:
+                doc_range = data.esp_range
+
+        return doc_range
 
     def get_nested_item(self, path):
         # type: (ConfigPath) -> ConfigType
