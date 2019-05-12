@@ -103,6 +103,8 @@ class BME680Component : public PollingComponent, public i2c::I2CDevice {
   void update() override;
 
  protected:
+  // Set up control registers - IIR, oversampling, gas heater
+  void setup_control_registers_();
   /// Calculate the heater resistance value to send to the BME680 register.
   uint8_t calc_heater_resistance_(uint16_t temperature);
   /// Calculate the heater duration value to send to the BME680 register.

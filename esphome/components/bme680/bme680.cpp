@@ -131,6 +131,10 @@ void BME680Component::setup() {
 
   this->calibration_.ambient_temperature = 25;  // prime ambient temperature
 
+  setup_control_registers_();
+}
+
+void BME680Component::setup_control_registers_() {
   // Config register
   uint8_t config_register;
   if (!this->read_byte(BME680_REGISTER_CONFIG, &config_register)) {
@@ -153,6 +157,20 @@ void BME680Component::setup() {
   hum_control &= ~0b00000111;
   hum_control |= this->humidity_oversampling_ & 0b111;
   if (!this->write_byte(BME680_REGISTER_CONTROL_HUMIDITY, hum_control)) {
+    this->mark_failed();
+    return;
+  }
+
+  // Temperature and pressure control register
+  uint8_t meas_control;
+  if(!this->read_byte(BME680_REGISTER_CONTROL_MEAS, &meas_control)) {
+    this->mark_failed();
+    return;
+  }
+  meas_control &= ~0b11111100;
+  meas_control |= (this->temperature_oversampling_ & 0b111) << 5;
+  meas_control |= (this->pressure_oversampling_ & 0b111) << 2;
+  if (!this->write_byte(BME680_REGISTER_CONTROL_MEAS, meas_control)) {
     this->mark_failed();
     return;
   }
