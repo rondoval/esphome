@@ -182,7 +182,7 @@ void BME680Component::setup_control_registers_() {
     return;
   }
   gas1_control &= ~0b00011111;
-  gas1_control |= 1 << 4;
+  gas1_control |= this->run_gas_ << 4;
   gas1_control |= 0;  // profile 0
   if (!this->write_byte(BME680_REGISTER_CONTROL_GAS1, gas1_control)) {
     this->mark_failed();
@@ -475,7 +475,8 @@ uint32_t BME680Component::calc_meas_duration_() {
   tph_dur += 1;  // Wake up duration of 1ms
 
   /* The remaining time should be used for heating */
-  tph_dur += this->heater_duration_;
+  if(this->run_gas_)
+    tph_dur += this->heater_duration_;
 
   return tph_dur;
 }
@@ -493,6 +494,8 @@ void BME680Component::set_heater(uint16_t heater_temperature, uint16_t heater_du
   this->heater_temperature_ = heater_temperature;
   this->heater_duration_ = heater_duration;
 }
+
+void BME680Component::set_run_gas_(bool run_gas) { this->run_gas_ = run_gas; }
 
 }  // namespace bme680
 }  // namespace esphome

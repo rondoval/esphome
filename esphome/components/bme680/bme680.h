@@ -103,6 +103,8 @@ class BME680Component : public PollingComponent, public i2c::I2CDevice {
   void update() override;
 
  protected:
+  // Enable or disable gas measurement.
+  void set_run_gas_(bool run_gas);
   // Set up control registers - IIR, oversampling, gas heater
   void setup_control_registers_();
   /// Calculate the heater resistance value to send to the BME680 register.
@@ -130,6 +132,7 @@ class BME680Component : public PollingComponent, public i2c::I2CDevice {
   BME680IIRFilter iir_filter_{BME680_IIR_FILTER_OFF};
   uint16_t heater_temperature_{320};
   uint16_t heater_duration_{150};
+  bool run_gas_ {true};
 
   sensor::Sensor *temperature_sensor_;
   sensor::Sensor *pressure_sensor_;
