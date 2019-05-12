@@ -32,8 +32,8 @@ enum BME680Oversampling {
 /// Struct for storing calibration data for the BME680.
 struct BME680CalibrationData {
   uint16_t t1;
-  uint16_t t2;
-  uint8_t t3;
+  int16_t t2;
+  int8_t t3;
 
   uint16_t p1;
   int16_t p2;
@@ -44,7 +44,7 @@ struct BME680CalibrationData {
   int8_t p7;
   int16_t p8;
   int16_t p9;
-  int8_t p10;
+  uint8_t p10;
 
   uint16_t h1;
   uint16_t h2;
@@ -59,8 +59,8 @@ struct BME680CalibrationData {
   int8_t gh3;
 
   uint8_t res_heat_range;
-  uint8_t res_heat_val;
-  uint8_t range_sw_err;
+  int8_t res_heat_val;
+  int8_t range_sw_err;
 
   float tfine;
   uint8_t ambient_temperature;
