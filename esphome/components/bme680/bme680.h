@@ -119,7 +119,7 @@ class BME680Component : public PollingComponent, public i2c::I2CDevice {
   /// Calculate the relative humidity in % using the provided raw ADC value.
   float calc_humidity_(uint16_t raw_humidity);
   /// Calculate the gas resistance in Ω using the provided raw ADC value.
-  uint32_t calc_gas_resistance_(uint16_t raw_gas, uint8_t range);
+  float calc_gas_resistance_(uint16_t raw_gas, uint8_t range);
   /// Calculate how long the sensor will take until we can retrieve data.
   uint32_t calc_meas_duration_();
 
