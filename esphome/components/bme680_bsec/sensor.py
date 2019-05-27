@@ -2,10 +2,11 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import core
 from esphome.components import i2c, sensor
-from esphome.const import CONF_DURATION, CONF_GAS_RESISTANCE, CONF_HEATER, \
-    CONF_HUMIDITY, CONF_ID, CONF_IIR_FILTER, CONF_OVERSAMPLING, CONF_PRESSURE, \
-    CONF_TEMPERATURE, UNIT_OHM, ICON_GAS_CYLINDER, UNIT_CELSIUS, \
-    ICON_THERMOMETER, UNIT_HECTOPASCAL, ICON_GAUGE, ICON_WATER_PERCENT, UNIT_PERCENT
+from esphome.const import CONF_IAQ, CONF_CO2_EQUIVALENT, CONF_GAS_RESISTANCE, CONF_BREATHING_VOC, CONF_HUMIDITY, \
+    CONF_ID, CONF_PRESSURE, CONF_TEMPERATURE, UNIT_OHM, \
+    ICON_GAS_CYLINDER, UNIT_CELSIUS, ICON_THERMOMETER, \
+    UNIT_HECTOPASCAL, ICON_GAUGE, ICON_WATER_PERCENT, UNIT_PERCENT, UNIT_EMPTY, UNIT_PARTS_PER_MILLION
+from esphome.const import SOURCE_FILE_EXTENSIONS
 
 DEPENDENCIES = ['i2c']
 
@@ -33,6 +34,11 @@ CONFIG_SCHEMA = cv.Schema({
 
 
 def to_code(config):
+    SOURCE_FILE_EXTENSIONS.add('.a')
+    # We are expecting to have the proprietary blob in the project directory
+    cg.add_build_flag("-lalgobsec")
+    cg.add_build_flag("-L../")
+    cg.add_build_flag("-I../")
     var = cg.new_Pvariable(config[CONF_ID])
     yield cg.register_component(var, config)
     yield i2c.register_i2c_device(var, config)

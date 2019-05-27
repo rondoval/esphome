@@ -3,12 +3,12 @@
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/i2c/i2c.h"
-#include "inc/bsec_datatypes.h"
-#include "inc/bsec_interface.h"
+#include "esphome/components/bme680/bme680.h"
+#include "bsec_datatypes.h"
+#include "bsec_interface.h"
 
 namespace esphome {
 namespace bme680 {
-
 
 class BME680BsecComponent : public BME680Component {
  public:
