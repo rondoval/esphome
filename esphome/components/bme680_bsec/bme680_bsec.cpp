@@ -24,14 +24,14 @@ void BME680BsecComponent::setup() {
 	status = bsec_set_configuration(bsec_config_iaq, BSEC_MAX_PROPERTY_BLOB_SIZE, workBuffer, sizeof(workBuffer));
 
 	// setup virtual sensors
-	bsec_sensor_configuration_t bsecSensList {
+	bsec_sensor_configuration_t bsecSensList[] {
 		{BSEC_SAMPLE_RATE_LP, BSEC_OUTPUT_RAW_PRESSURE},
 		{BSEC_SAMPLE_RATE_LP, BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE},
 		{BSEC_SAMPLE_RATE_LP, BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY},
 		{BSEC_SAMPLE_RATE_ULP, BSEC_OUTPUT_RAW_GAS},
 		{BSEC_SAMPLE_RATE_ULP, BSEC_OUTPUT_IAQ},
 		{BSEC_SAMPLE_RATE_ULP, BSEC_OUTPUT_CO2_EQUIVALENT},
-		{BSEC_SAMPLE_RATE_ULP, BSEC_OUTPUT_BREATH_VOC_EQUIVALENT},
+		{BSEC_SAMPLE_RATE_ULP, BSEC_OUTPUT_BREATH_VOC_EQUIVALENT}
 	};
 	bsec_sensor_configuration_t sensorSettings[BSEC_MAX_PHYSICAL_SENSOR];
 	uint8_t nSensorSettings = BSEC_MAX_PHYSICAL_SENSOR;
@@ -48,9 +48,11 @@ void BME680BsecComponent::update() {
 
 		bsec_bme_settings_t settings;
 		bsec_library_return_t status = bsec_sensor_control(call_time_ns, &settings);
-		if (status < BSEC_OK)
-			return false;
-
+		if (status < BSEC_OK) {
+      this->status_set_warning();
+			return;
+    }
+    
 		next_call = settings.next_call / int64_t(1000000); // Convert from ns to ms
 
 		set_run_gas(settings.run_gas);
@@ -59,22 +61,22 @@ void BME680BsecComponent::update() {
 		set_pressure_oversampling(settings.pressure_oversampling);
     set_heater(settings.heater_temperature, settings.heating_duration);
 
-    this->set_config();
+    this->setup_control_registers_();
 
     uint8_t meas_control = 0;  // No need to fetch, we're setting all fields
     meas_control |= (this->temperature_oversampling_ & 0b111) << 5;
     meas_control |= (this->pressure_oversampling_ & 0b111) << 2;
     meas_control |= 0b01;  // forced mode, triggers measurement
-    if (!this->write_byte(BME680_REGISTER_CONTROL_MEAS, meas_control)) {
+    if (!this->write_byte(0x74, meas_control)) {
       this->status_set_warning();
       return;
     }
     /* Wait for measurement to complete */
-    this->set_timeout("data", this->calc_meas_duration_(), [this]() { this->read_process_data(call_time_ns, settings); });
+    this->set_timeout("data", this->calc_meas_duration_(), [this,call_time_ns,settings]() { this->read_process_data(call_time_ns, settings); });
   }
 }
 
-void BME680BsecComponent::read_process_data(int64_t curr_time_ns, bsec_bme_settings_t settings) {
+void BME680BsecComponent::read_process_data(const int64_t curr_time_ns, const bsec_bme_settings_t settings) {
   BME680Component::read_data_();
 
   bsec_input_t inputs[BSEC_MAX_PHYSICAL_SENSOR]; // Temp, Pres, Hum & Gas
@@ -113,7 +115,7 @@ void BME680BsecComponent::read_process_data(int64_t curr_time_ns, bsec_bme_setti
     if (status != BSEC_OK)
       return false;
 
-    this->status_clear_warning();}
+    this->status_clear_warning();
 
     if (nOutputs > 0) {
       for (uint8_t i = 0; i < nOutputs; i++) {
@@ -149,6 +151,7 @@ void BME680BsecComponent::read_process_data(int64_t curr_time_ns, bsec_bme_setti
             break;
           default:
             break;
+        }
       }
     }
   }
@@ -162,7 +165,7 @@ int64_t BME680BsecComponent::get_time_ms() {
 		millis_overflow_counter++;
 	}
 
-	return time_ms + (millis_overflow_counter << 32);
+	return time_ms + ((int64_t)millis_overflow_counter << 32);
 }
 
 }  // namespace bme680
