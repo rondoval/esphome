@@ -18,10 +18,12 @@ void BME680BsecComponent::setup() {
 	bsec_init();
 	bsec_version_t version;
 	bsec_get_version(&version);
+//  ESP_LOGCONFIG(TAG, "BSEC lib version: %d.%d.%d.%d", bme680.version.major, bme680.version.minor, bme680.version.major_bugfix, version.minor_bugfix);
 
 	// set BSEC lib configuration
 	uint8_t workBuffer[BSEC_MAX_PROPERTY_BLOB_SIZE];
-	status = bsec_set_configuration(bsec_config_iaq, BSEC_MAX_PROPERTY_BLOB_SIZE, workBuffer, sizeof(workBuffer));
+	//status =
+  bsec_set_configuration(bsec_config_iaq, BSEC_MAX_PROPERTY_BLOB_SIZE, workBuffer, sizeof(workBuffer));
 
 	// setup virtual sensors
 	bsec_sensor_configuration_t bsecSensList[] {
@@ -36,7 +38,8 @@ void BME680BsecComponent::setup() {
 	bsec_sensor_configuration_t sensorSettings[BSEC_MAX_PHYSICAL_SENSOR];
 	uint8_t nSensorSettings = BSEC_MAX_PHYSICAL_SENSOR;
 
-	status = bsec_update_subscription(bsecSensList, sizeof(bsecSensList), sensorSettings, &nSensorSettings);
+	//status =
+  bsec_update_subscription(bsecSensList, sizeof(bsecSensList), sensorSettings, &nSensorSettings);
 }
 
 void BME680BsecComponent::update() {
@@ -55,11 +58,11 @@ void BME680BsecComponent::update() {
     
 		next_call = settings.next_call / int64_t(1000000); // Convert from ns to ms
 
-		set_run_gas(settings.run_gas);
-		set_humidity_oversampling(ettings.humidity_oversampling);
-		set_temperature_oversampling(settings.temperature_oversampling);
-		set_pressure_oversampling(settings.pressure_oversampling);
-    set_heater(settings.heater_temperature, settings.heating_duration);
+		this->set_run_gas_(settings.run_gas);
+		this->set_humidity_oversampling((BME680Oversampling)settings.humidity_oversampling);
+		this->set_temperature_oversampling((BME680Oversampling)settings.temperature_oversampling);
+		this->set_pressure_oversampling((BME680Oversampling)settings.pressure_oversampling);
+    this->set_heater(settings.heater_temperature, settings.heating_duration);
 
     this->setup_control_registers_();
 
@@ -84,25 +87,25 @@ void BME680BsecComponent::read_process_data(const int64_t curr_time_ns, const bs
 
   if (settings.process_data & BSEC_PROCESS_TEMPERATURE) {
     inputs[nInputs].sensor_id = BSEC_INPUT_TEMPERATURE;
-    inputs[nInputs].signal = temperature;
+    inputs[nInputs].signal = temperature_sensor_->raw_state; //todo wrong - should not publish
     inputs[nInputs].time_stamp = curr_time_ns;
     nInputs++;
   }
   if (settings.process_data & BSEC_PROCESS_HUMIDITY) {
     inputs[nInputs].sensor_id = BSEC_INPUT_HUMIDITY;
-    inputs[nInputs].signal = humidity;
+    inputs[nInputs].signal = humidity_sensor_->raw_state;
     inputs[nInputs].time_stamp = curr_time_ns;
     nInputs++;
   }
   if (settings.process_data & BSEC_PROCESS_PRESSURE) {
     inputs[nInputs].sensor_id = BSEC_INPUT_PRESSURE;
-    inputs[nInputs].signal = pressure;
+    inputs[nInputs].signal = pressure_sensor_->raw_state;
     inputs[nInputs].time_stamp = curr_time_ns;
     nInputs++;
   }
   if (settings.process_data & BSEC_PROCESS_GAS) {
     inputs[nInputs].sensor_id = BSEC_INPUT_GASRESISTOR;
-    inputs[nInputs].signal = gas_resistance;
+    inputs[nInputs].signal = gas_resistance_sensor_->raw_state;
     inputs[nInputs].time_stamp = curr_time_ns;
     nInputs++;
   }
@@ -111,9 +114,10 @@ void BME680BsecComponent::read_process_data(const int64_t curr_time_ns, const bs
     uint8_t nOutputs = BSEC_NUMBER_OUTPUTS;
     bsec_output_t _outputs[BSEC_NUMBER_OUTPUTS];
 
-    status = bsec_do_steps(inputs, nInputs, _outputs, &nOutputs);
-    if (status != BSEC_OK)
-      return false;
+    //status =
+    bsec_do_steps(inputs, nInputs, _outputs, &nOutputs);
+  //  if (status != BSEC_OK)
+    //  return false;
 
     this->status_clear_warning();
 
