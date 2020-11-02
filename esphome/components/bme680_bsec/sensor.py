@@ -1,3 +1,4 @@
+import os.path
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import core
@@ -34,11 +35,14 @@ CONFIG_SCHEMA = cv.Schema({
 
 
 def to_code(config):
-    SOURCE_FILE_EXTENSIONS.add('.a')
     # We are expecting to have the proprietary blob in the project directory
     cg.add_build_flag("-lalgobsec")
-    cg.add_build_flag("-L../")
-    cg.add_build_flag("-I../")
+    pt = os.path.abspath(core.CORE.config_dir).replace("\\","\\\\")
+    cg.add_build_flag("-L" + pt)
+    cg.add_build_flag("-I" + pt)
+
+    # Have to modify the LD script
+
     var = cg.new_Pvariable(config[CONF_ID])
     yield cg.register_component(var, config)
     yield i2c.register_i2c_device(var, config)
