@@ -21,6 +21,7 @@ void HttpRequestComponent::send() {
 #endif
 #ifdef ARDUINO_ARCH_ESP8266
 #ifndef CLANG_TIDY
+  this->client_.setReuse(false);
   this->client_.setFollowRedirects(true);
   this->client_.setRedirectLimit(3);
   begin_status = this->client_.begin(*this->get_wifi_client_(), url);
